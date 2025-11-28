@@ -29,9 +29,15 @@ var addressPrefix = '192.168.0.0/24'
 var subnetName = 'vm-subnet'
 var subnetAddressPrefix = '192.168.0.0/24'
 
-var publicIpAddressName = '${namingPrefix}-pip'
+var publicIpAddressName = '${vmName}-pip'
 
-var networkInterfaceName = '${namingPrefix}-nic'
+var networkInterfaceName = '${vmName}-nic'
+
+var vmName = '${namingPrefix}-vm'
+var vmDiskSku string = 'PremiumV2_LRS'
+var vmOSDiskType = 'Premium_LRS'
+var vmSize string = 'Standard_D8s_v5'
+var vmWindowsOSVersion = '2025-datacenter-g2'
 
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: networkSecurityGroupName
@@ -100,5 +106,112 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   }
 }
 
+resource vmDisk 'Microsoft.Compute/disks@2024-03-02' = {
+  location: location
+  name: '${vmName}-VMsDisk'
+  sku: {
+    name: vmDiskSku
+  }
+  properties: {
+    creationData: {
+      createOption: 'Empty'
+    }
+    diskSizeGB: 256
+    burstingEnabled: false
+    diskMBpsReadWrite: 200
+    diskIOPSReadWrite: 5000
+  }
+}
 
-// TODO Entra id to VM
+resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
+  name: vmName
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+  properties: {
+    hardwareProfile: {
+      vmSize: vmSize
+    }
+    storageProfile: {
+      osDisk: {
+        name: '${vmName}-OSDisk'
+        caching: 'ReadWrite'
+        createOption: 'FromImage'
+        managedDisk: {
+          storageAccountType: vmOSDiskType
+        }
+        diskSizeGB: 127
+      }
+      imageReference: {
+        publisher: 'MicrosoftWindowsServer'
+        offer: 'WindowsServer'
+        sku: vmWindowsOSVersion
+        version: 'latest'
+      }
+      dataDisks: [
+        {
+          createOption: 'Attach'
+          lun: 0
+          managedDisk: {
+            id: vmDisk.id
+          }
+        }
+      ]
+    }
+    networkProfile: {
+      networkInterfaces: [
+        {
+          id: networkInterface.id
+        }
+      ]
+    }
+    osProfile: {
+      computerName: vmName
+      adminUsername: windowsAdminUsername
+      adminPassword: windowsAdminPassword
+      windowsConfiguration: {
+        provisionVMAgent: true
+        enableAutomaticUpdates: true
+      }
+    }
+    priority: enableAzureSpotPricing ? 'Spot' : 'Regular'
+    evictionPolicy: enableAzureSpotPricing ? 'Deallocate' : null
+    billingProfile: enableAzureSpotPricing ? {
+      maxPrice: -1
+    } : null
+  }
+}
+
+resource vmEntraExtension 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
+  parent: vm
+  name: 'AADLoginForWindows'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Azure.ActiveDirectory'
+    type: 'AADLoginForWindows'
+    typeHandlerVersion: '1.0'
+    autoUpgradeMinorVersion: true
+  }
+}
+
+resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = if (autoShutdownEnabled) {
+  name: 'shutdown-computevm-${vm.name}'
+  location: location
+  properties: {
+    status: 'Enabled'
+    taskType: 'ComputeVmShutdownTask'
+    dailyRecurrence: {
+      time: autoShutdownTime
+    }
+    timeZoneId: autoShutdownTimezone
+    notificationSettings: {
+      status: empty(autoShutdownEmailRecipient) ? 'Disabled' : 'Enabled' // Set status based on whether an email is provided
+      timeInMinutes: 30
+      webhookUrl: ''
+      emailRecipient: autoShutdownEmailRecipient
+      notificationLocale: 'en'
+    }
+    targetResourceId: vm.id
+  }
+}
