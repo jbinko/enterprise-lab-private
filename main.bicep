@@ -31,6 +31,8 @@ var subnetAddressPrefix = '192.168.0.0/24'
 
 var publicIpAddressName = '${namingPrefix}-pip'
 
+var networkInterfaceName = '${namingPrefix}-nic'
+
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: networkSecurityGroupName
   location: location
@@ -73,5 +75,30 @@ resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   }
   sku: {
     name: 'Standard'
+    tier: 'Regional'
   }
 }
+
+resource networkInterface 'Microsoft.Network/networkInterfaces@2024-05-01' = {
+  name: networkInterfaceName
+  location: location
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'ipconfig1'
+        properties: {
+          subnet: {
+            id: virtualNetwork.properties.subnets[0].id
+          }
+          privateIPAllocationMethod: 'Dynamic'
+          publicIPAddress: {
+            id: publicIpAddress.id
+          }
+        }
+      }
+    ]
+  }
+}
+
+
+// TODO Entra id to VM
