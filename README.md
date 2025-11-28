@@ -22,6 +22,17 @@ By spinning up this lab, you can explore and experiment with several scenarios, 
 - Azure Migrate Assessment - Evaluate workloads for migration. Note: treat servers as physical machines since Hyper-V layer access is not available.
 - Custom Use Cases - Test additional scenarios relevant to your environment or projects.
 
+## Cost Optimization and Security Notes
+
+⚠️ **Important**: This configuration exposes VMs to the internet.
+
+This lab uses a cost-optimized approach for remote connectivity:
+
+- **No Azure Bastion** - Bastion service is not deployed to minimize costs
+- **No P2S VPN Gateway** - Point-to-Site VPN gateway is not deployed to minimize costs
+- **Public IP Addresses** - Lab VM is assigned public IPs for direct remote access
+- **JIT Access** - Just-In-Time VM access through Microsoft Entra ID provides time-limited RDP access
+
 ## Prerequisites
 
 ## Github Provisioning Pipeline

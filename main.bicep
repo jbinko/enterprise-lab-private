@@ -108,7 +108,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2024-05-01' = {
 
 resource vmDisk 'Microsoft.Compute/disks@2024-03-02' = {
   location: location
-  name: '${vmName}-VMsDisk'
+  name: '${vmName}-DataDisk'
   sku: {
     name: vmDiskSku
   }
@@ -183,18 +183,6 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
   }
 }
 
-resource vmEntraExtension 'Microsoft.Compute/virtualMachines/extensions@2021-07-01' = {
-  parent: vm
-  name: 'AADLoginForWindows'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Azure.ActiveDirectory'
-    type: 'AADLoginForWindows'
-    typeHandlerVersion: '1.0'
-    autoUpgradeMinorVersion: true
-  }
-}
-
 resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = if (autoShutdownEnabled) {
   name: 'shutdown-computevm-${vm.name}'
   location: location
@@ -215,3 +203,7 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = if (autoShut
     targetResourceId: vm.id
   }
 }
+
+
+
+// TODO: Entra ID login for VM admin user ???
