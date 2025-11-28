@@ -17,11 +17,6 @@ on:
         required: true
         type: string
         default: 'entrlab'
-      workaround_storage_account:
-        description: 'Storage Account for workaround'
-        required: true
-        type: string
-        default: 'entrlabworkaroundsa'
 
 jobs:
   build-and-deploy:
