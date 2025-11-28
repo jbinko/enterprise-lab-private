@@ -34,7 +34,7 @@ var publicIpAddressName = '${vmName}-pip'
 var networkInterfaceName = '${vmName}-nic'
 
 var vmName = '${namingPrefix}-vm'
-var vmDiskSku string = 'PremiumV2_LRS'
+var vmDiskSku string = 'Premium_LRS'
 var vmOSDiskType = 'Premium_LRS'
 var vmSize string = 'Standard_D8s_v5'
 var vmWindowsOSVersion = '2025-datacenter-g2'
