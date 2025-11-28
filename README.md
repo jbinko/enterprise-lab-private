@@ -52,16 +52,18 @@ In your GitHub repository, go to **Settings > Secrets and variables > Actions > 
 
 **How to create `AZURE_CREDENTIALS`:**
 
-After running the `az ad sp create-for-rbac` command, copy the entire JSON output (including `appId`, `password`, and `tenant`).
+After running the `az ad sp create-for-rbac` command, you need to transform the output into the format required by the Azure Login action.
 
-In GitHub, create a new secret named `AZURE_CREDENTIALS` and paste the full JSON output as the value. It should look like this:
+The command outputs fields like `appId`, `password`, and `tenant`, but the action expects `clientId`, `clientSecret`, `tenantId`, and `subscriptionId`.
+
+In GitHub, create a new secret named `AZURE_CREDENTIALS` with the following JSON structure:
 
 ```json
 {
-  "appId": "<your-app-id>",
-  "displayName": "<your-sp-name>",
-  "password": "<your-password>",
-  "tenant": "<your-tenant-id>"
+  "clientId": "<appId-from-command-output>",
+  "clientSecret": "<password-from-command-output>",
+  "tenantId": "<tenant-from-command-output>",
+  "subscriptionId": "<your-subscription-id>"
 }
 ```
 

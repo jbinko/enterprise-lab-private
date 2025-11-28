@@ -40,7 +40,4 @@ jobs:
         subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ inputs.azure_rg }}
         template: ./main.bicep
-        parameters: |
-          location=${{ inputs.azure_location }}
-          adminUsername=${{ secrets.ADMIN_USERNAME }}
-          adminPassword=${{ secrets.ADMIN_PASSWORD }}
+        parameters: location=${{ inputs.azure_location }} adminUsername=${{ secrets.ADMIN_USERNAME }} adminPassword=${{ secrets.ADMIN_PASSWORD }}
