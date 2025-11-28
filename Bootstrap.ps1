@@ -67,12 +67,6 @@ Set-ItemProperty -Path $oobePath -Name $oobeProperty -Value $oobeValue
 
 Write-Host "Registry keys and values for Diagnostic Data settings have been set successfully."
 
-# Install Hyper-V and reboot
-Write-Host "Installing Hyper-V and restart"
-Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
-Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
-Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
-
 # Install AutomatedLab
 Write-Host "Installing AutomatedLab"
 Install-PackageProvider Nuget -Force -Confirm:$False
@@ -93,6 +87,12 @@ New-LabSourcesFolder -DriveLetter F
 #New-LabDefinition -Name Win10 -DefaultVirtualizationEngine HyperV
 #Add-LabMachineDefinition -Name Client1 -Memory 1GB -OperatingSystem 'Windows 10 Pro'
 #Install-Lab
+
+# Install Hyper-V and reboot
+Write-Host "Installing Hyper-V and restart"
+Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
 
 Stop-Transcript
 
