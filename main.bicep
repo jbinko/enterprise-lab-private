@@ -22,10 +22,23 @@ param autoShutdownEmailRecipient string = ''
 @description('Option to enable spot pricing for the master VM')
 param enableAzureSpotPricing bool = true
 
-var virtualNetworkName = '${namingPrefix}-VNet'
+var networkSecurityGroupName = '${namingPrefix}-nsg'
+
+var virtualNetworkName = '${namingPrefix}-vnet'
 var addressPrefix = '192.168.0.0/24'
 var subnetName = 'vm-subnet'
 var subnetAddressPrefix = '192.168.0.0/24'
+
+var publicIpAddressName = '${namingPrefix}-pip'
+
+resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+  name: networkSecurityGroupName
+  location: location
+  properties: {
+    securityRules: [
+    ]
+  }
+}
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   name: virtualNetworkName
@@ -41,8 +54,24 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
         name: subnetName
         properties: {
           addressPrefix: subnetAddressPrefix
+          networkSecurityGroup: {
+            id: networkSecurityGroup.id
+          }
         }
       }
     ]
+  }
+}
+
+resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
+  name: publicIpAddressName
+  location: location
+  properties: {
+    publicIPAllocationMethod: 'Static'
+    publicIPAddressVersion: 'IPv4'
+    idleTimeoutInMinutes: 4
+  }
+  sku: {
+    name: 'Standard'
   }
 }
