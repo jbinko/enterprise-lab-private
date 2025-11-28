@@ -75,9 +75,9 @@ Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementToo
 
 # Install AutomatedLab
 Write-Host "Installing AutomatedLab"
-# ?? Install-PackageProvider Nuget -Force
-Install-Module PSFramework -SkipPublisherCheck -Force
-Install-Module AutomatedLab -SkipPublisherCheck -Force
+Install-PackageProvider Nuget -Force -Confirm:$False
+Install-Module PSFramework -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
+Install-Module AutomatedLab -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
 
 #  Disable (which is already the default) and in addition skip dialog
 [Environment]::SetEnvironmentVariable('AUTOMATEDLAB_TELEMETRY_OPTIN', 'false', 'Machine')
