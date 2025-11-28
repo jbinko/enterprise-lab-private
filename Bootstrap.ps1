@@ -73,6 +73,27 @@ Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
 Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
 Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
 
+# Install AutomatedLab
+Write-Host "Installing AutomatedLab"
+# ?? Install-PackageProvider Nuget -Force
+Install-Module PSFramework -SkipPublisherCheck -Force
+Install-Module AutomatedLab -SkipPublisherCheck -Force
+
+#  Disable (which is already the default) and in addition skip dialog
+[Environment]::SetEnvironmentVariable('AUTOMATEDLAB_TELEMETRY_OPTIN', 'false', 'Machine')
+$env:AUTOMATEDLAB_TELEMETRY_OPTIN = 'false'
+
+# Pre-configure Lab Host Remoting
+Enable-LabHostRemoting -Force
+
+New-LabSourcesFolder -DriveLetter F
+
+# Create and install lab
+#Write-Host "Creating and installing lab"
+#New-LabDefinition -Name Win10 -DefaultVirtualizationEngine HyperV
+#Add-LabMachineDefinition -Name Client1 -Memory 1GB -OperatingSystem 'Windows 10 Pro'
+#Install-Lab
+
 Stop-Transcript
 
 # Restart computer
