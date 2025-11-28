@@ -2,8 +2,8 @@
 
 This lab is based on ideas of:
 
-[Automated Azure Arc](https://github.com/microsoft/azure_arc)
-[Lab Deployment in Azure](https://github.com/weeyin83/Lab-Deployment-in-Azure)
+- [Automated Azure Arc](https://github.com/microsoft/azure_arc)
+- [Lab Deployment in Azure](https://github.com/weeyin83/Lab-Deployment-in-Azure)
 
 ## Lab Use Cases Overview
 
@@ -21,3 +21,53 @@ By spinning up this lab, you can explore and experiment with several scenarios, 
 - Azure File Sync Configuration - Implement hybrid file services and synchronize data between on-prem and Azure for a production-like setup.
 - Azure Migrate Assessment - Evaluate workloads for migration. Note: treat servers as physical machines since Hyper-V layer access is not available.
 - Custom Use Cases - Test additional scenarios relevant to your environment or projects.
+
+## Prerequisites
+
+## Github Provisioning Pipeline
+
+To configure Azure and GitHub Actions for automated deployments using a Service Principal (SP), follow these steps:
+
+### 1. Create an Azure Service Principal
+
+Run the following command in Azure CLI (replace `<NAME>` and `<SUBSCRIPTION_ID>`):
+
+```sh
+az ad sp create-for-rbac --name <NAME> --role contributor --scopes /subscriptions/<SUBSCRIPTION_ID>
+```
+
+This will output:
+- `appId` (Client ID)
+- `password` (Client Secret)
+- `tenant` (Tenant ID)
+
+### 2. Add Secrets to GitHub
+
+In your GitHub repository, go to **Settings > Secrets and variables > Actions > New repository secret** and add:
+
+- `AZURE_CREDENTIALS` = JSON output from the Service Principal creation (see below)
+- `AZURE_SUBSCRIPTION_ID` = your Azure subscription ID
+- `ADMIN_USERNAME` = administrator username for the lab VMs
+- `ADMIN_PASSWORD` = administrator password for the lab VMs
+
+**How to create `AZURE_CREDENTIALS`:**
+
+After running the `az ad sp create-for-rbac` command, copy the entire JSON output (including `appId`, `password`, and `tenant`).
+
+In GitHub, create a new secret named `AZURE_CREDENTIALS` and paste the full JSON output as the value. It should look like this:
+
+```json
+{
+  "appId": "<your-app-id>",
+  "displayName": "<your-sp-name>",
+  "password": "<your-password>",
+  "tenant": "<your-tenant-id>"
+}
+```
+
+This allows GitHub Actions to authenticate securely using the Service Principal.
+
+### 3. Run GitHub Actions Workflow
+
+This setup allows GitHub Actions to authenticate to Azure and deploy resources securely using the Service Principal.
+You can now manually trigger the workflow from the GitHub Actions tab in your repository.
