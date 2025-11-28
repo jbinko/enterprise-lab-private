@@ -22,8 +22,8 @@ param autoShutdownEmailRecipient string = ''
 @description('Option to enable spot pricing for the master VM')
 param enableAzureSpotPricing bool = true
 
-@description('The URL to the bootstrap script for VM initialization')
-param bootstrapUrl string
+@description('The base URL used for accessing artifacts and automation artifacts.')
+param templateBaseUrl string
 
 var networkSecurityGroupName = '${namingPrefix}-nsg'
 
@@ -197,7 +197,7 @@ resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' =
     autoUpgradeMinorVersion: true
     protectedSettings: {
       fileUris: [
-        bootstrapUrl
+        uri(templateBaseUrl, 'Bootstrap.ps1')
       ]
       commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1'
     }

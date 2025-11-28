@@ -36,31 +36,6 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    # ---------------------- Workaround until repository is public ----------------------
-    - name: Upload file to Blob
-      run: |
-        az storage blob upload \
-        --account-name ${{ inputs.workaround_storage_account }} \
-        --container-name bootstrap \
-        --name Bootstrap.ps1 \
-        --file ./Bootstrap.ps1 \
-        --auth-mode login
-
-    - name: Generate SAS URL
-      id: generate_sas
-      run: |
-        SAS=$(az storage blob generate-sas \
-          --account-name ${{ inputs.workaround_storage_account }} \
-          --container-name bootstrap \
-          --name Bootstrap.ps1 \
-          --permissions r \
-          --expiry $(date -u -d "+1 hour" '+%Y-%m-%dT%H:%MZ') \
-          --https-only \
-          --output tsv)
-        echo "SAS_URL=https://${{ inputs.workaround_storage_account }}.blob.core.windows.net/bootstrap/Bootstrap.ps1?$SAS" >> $GITHUB_OUTPUT
-
-    # ---------------------- End of Workaround ----------------------
-
     # Create Resource Group
     - name: Create Resource Group
       run: |
@@ -74,5 +49,5 @@ jobs:
       with:
         resourceGroupName: ${{ inputs.azure_rg }}
         template: ./main.bicep
-        parameters: location=${{ inputs.azure_location }} namingPrefix=${{ inputs.namingPrefix }} windowsAdminUsername=${{ secrets.WINDOWS_ADMIN_USERNAME }} windowsAdminPassword=${{ secrets.WINDOWS_ADMIN_PASSWORD }} bootstrapUrl="${{ steps.generate_sas.outputs.SAS_URL }}"
+        parameters: location=${{ inputs.azure_location }} namingPrefix=${{ inputs.namingPrefix }} windowsAdminUsername=${{ secrets.WINDOWS_ADMIN_USERNAME }} windowsAdminPassword=${{ secrets.WINDOWS_ADMIN_PASSWORD }} templateBaseUrl="${{ github.server_url }}/${{ github.repository }}"
         failOnStdErr: true
