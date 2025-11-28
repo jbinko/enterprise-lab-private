@@ -46,9 +46,8 @@ This will output:
 In your GitHub repository, go to **Settings > Secrets and variables > Actions > New repository secret** and add:
 
 - `AZURE_CREDENTIALS` = JSON output from the Service Principal creation (see below)
-- `AZURE_SUBSCRIPTION_ID` = your Azure subscription ID
-- `ADMIN_USERNAME` = administrator username for the lab VMs
-- `ADMIN_PASSWORD` = administrator password for the lab VMs
+- `WINDOWS_ADMIN_USERNAME` = administrator username for the Windows lab VMs
+- `WINDOWS_ADMIN_PASSWORD` = administrator password for the Windows lab VMs
 
 **How to create `AZURE_CREDENTIALS`:**
 

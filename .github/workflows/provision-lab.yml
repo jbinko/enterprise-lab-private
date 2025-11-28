@@ -12,6 +12,11 @@ on:
         required: true
         type: string
         default: 'germanywestcentral'
+      namingPrefix:
+        description: 'Naming Prefix for resources'
+        required: true
+        type: string
+        default: 'entrlab'
 
 jobs:
   build-and-deploy:
@@ -37,7 +42,6 @@ jobs:
     - name: Deploy Bicep file
       uses: azure/arm-deploy@v1
       with:
-        subscriptionId: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         resourceGroupName: ${{ inputs.azure_rg }}
         template: ./main.bicep
-        parameters: location=${{ inputs.azure_location }} adminUsername=${{ secrets.ADMIN_USERNAME }} adminPassword=${{ secrets.ADMIN_PASSWORD }}
+        parameters: location=${{ inputs.azure_location }} namingPrefix=${{ inputs.namingPrefix }} windowsAdminUsername=${{ secrets.WINDOWS_ADMIN_USERNAME }} windowsAdminPassword=${{ secrets.WINDOWS_ADMIN_PASSWORD }}
