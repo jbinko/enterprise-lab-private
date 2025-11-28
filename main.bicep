@@ -22,6 +22,10 @@ param autoShutdownEmailRecipient string = ''
 @description('Option to enable spot pricing for the master VM')
 param enableAzureSpotPricing bool = true
 
+@description('Content of the Bootstrap.ps1 script to run on the VM')
+@secure()
+param bootstrapScriptContent string
+
 var networkSecurityGroupName = '${namingPrefix}-nsg'
 
 var virtualNetworkName = '${namingPrefix}-vnet'
@@ -180,6 +184,21 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     billingProfile: enableAzureSpotPricing ? {
       maxPrice: -1
     } : null
+  }
+}
+
+resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' = {
+  parent: vm
+  name: 'Bootstrap'
+  location: location
+  properties: {
+    publisher: 'Microsoft.Compute'
+    type: 'CustomScriptExtension'
+    typeHandlerVersion: '1.10'
+    autoUpgradeMinorVersion: true
+    protectedSettings: {
+      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -Command "${bootstrapScriptContent}"'
+    }
   }
 }
 
