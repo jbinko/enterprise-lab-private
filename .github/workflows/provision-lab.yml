@@ -38,20 +38,11 @@ jobs:
           --name ${{ inputs.azure_rg }} \
           --location ${{ inputs.azure_location }}
 
-    # Read Bootstrap Script
-    - name: Read Bootstrap Script
-      id: bootstrap
-      run: |
-        SCRIPT_CONTENT=$(cat Bootstrap.ps1)
-        echo "content<<EOF" >> $GITHUB_OUTPUT
-        echo "$SCRIPT_CONTENT" >> $GITHUB_OUTPUT
-        echo "EOF" >> $GITHUB_OUTPUT
-
     # Deploy Bicep Template
     - name: Deploy Bicep file
       uses: azure/arm-deploy@v1
       with:
         resourceGroupName: ${{ inputs.azure_rg }}
         template: ./main.bicep
-        parameters: location=${{ inputs.azure_location }} namingPrefix=${{ inputs.namingPrefix }} windowsAdminUsername=${{ secrets.WINDOWS_ADMIN_USERNAME }} windowsAdminPassword=${{ secrets.WINDOWS_ADMIN_PASSWORD }} bootstrapScriptContent=${{ steps.bootstrap.outputs.content }}
+        parameters: location=${{ inputs.azure_location }} namingPrefix=${{ inputs.namingPrefix }} windowsAdminUsername=${{ secrets.WINDOWS_ADMIN_USERNAME }} windowsAdminPassword=${{ secrets.WINDOWS_ADMIN_PASSWORD }}
         failOnStdErr: true
