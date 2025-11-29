@@ -1,5 +1,7 @@
+metadata description = 'Enterprise lab infrastructure deployment with Hyper-V capable VM'
+
 @description('Azure region for resources')
-param location string
+param location string = resourceGroup().location
 
 @maxLength(7)
 @description('The naming prefix for the resources')
@@ -15,45 +17,65 @@ param windowsAdminUsername string
 @secure()
 param windowsAdminPassword string
 
+@description('Enable auto-shutdown for the VM')
 param autoShutdownEnabled bool = true
-param autoShutdownTime string = '0100' // The time for auto-shutdown in HHmm format (24-hour clock)
-param autoShutdownTimezone string = 'UTC' // Timezone for the auto-shutdown
+
+@description('The time for auto-shutdown in HHmm format (24-hour clock)')
+param autoShutdownTime string = '0100'
+
+@description('Timezone for the auto-shutdown')
+param autoShutdownTimezone string = 'UTC'
+
+@description('Email recipient for auto-shutdown notifications')
 @secure()
 param autoShutdownEmailRecipient string = ''
 
-@description('Option to enable spot pricing for the master VM')
+@description('Enable Azure Spot pricing for the VM')
 param enableAzureSpotPricing bool = true
 
-@description('The base URL used for accessing artifacts.')
+@description('The base URL used for accessing artifacts')
 param artifactsBaseUrl string
 
-@description('Base64-encoded JSON string containing ISO download links for various OSes.')
+@description('Base64-encoded JSON string containing ISO download links for various OSes')
 @secure()
 param isoDownloadsBase64Json string
 
-var networkSecurityGroupName = '${namingPrefix}-nsg'
+@description('VM size for the master VM')
+param vmSize string = 'Standard_D8s_v5'
 
+@description('Windows OS version for the VM')
+param vmWindowsOSVersion string = '2025-datacenter-g2'
+
+@description('Storage account type for VM disks')
+@allowed([
+  'Premium_LRS'
+  'StandardSSD_LRS'
+  'Standard_LRS'
+])
+param vmDiskSku string = 'Premium_LRS'
+
+@description('Data disk size in GB')
+@minValue(1)
+@maxValue(32767)
+param dataDiskSizeGB int = 256
+
+// Naming variables
+var vmName = '${namingPrefix}-vm'
+var networkSecurityGroupName = '${namingPrefix}-nsg'
 var virtualNetworkName = '${namingPrefix}-vnet'
+var publicIpAddressName = '${vmName}-pip'
+var networkInterfaceName = '${vmName}-nic'
+
+// Network configuration
 var addressPrefix = '192.168.0.0/24'
 var subnetName = 'vm-subnet'
 var subnetAddressPrefix = '192.168.0.0/24'
-
-var publicIpAddressName = '${vmName}-pip'
-
-var networkInterfaceName = '${vmName}-nic'
-
-var vmName = '${namingPrefix}-vm'
-var vmDiskSku string = 'Premium_LRS'
-var vmOSDiskType = 'Premium_LRS'
-var vmSize string = 'Standard_D8s_v5'
-var vmWindowsOSVersion = '2025-datacenter-g2'
 
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: networkSecurityGroupName
   location: location
   properties: {
-    securityRules: [
-    ]
+    securityRules: []
   }
 }
 
@@ -83,14 +105,14 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
 resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   name: publicIpAddressName
   location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Regional'
+  }
   properties: {
     publicIPAllocationMethod: 'Static'
     publicIPAddressVersion: 'IPv4'
     idleTimeoutInMinutes: 4
-  }
-  sku: {
-    name: 'Standard'
-    tier: 'Regional'
   }
 }
 
@@ -116,8 +138,8 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2024-05-01' = {
 }
 
 resource vmDisk 'Microsoft.Compute/disks@2024-03-02' = {
-  location: location
   name: '${vmName}-DataDisk'
+  location: location
   sku: {
     name: vmDiskSku
   }
@@ -125,10 +147,8 @@ resource vmDisk 'Microsoft.Compute/disks@2024-03-02' = {
     creationData: {
       createOption: 'Empty'
     }
-    diskSizeGB: 256
+    diskSizeGB: dataDiskSizeGB
     burstingEnabled: false
-    diskMBpsReadWrite: 200
-    diskIOPSReadWrite: 5000
   }
 }
 
@@ -148,7 +168,7 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
         caching: 'ReadWrite'
         createOption: 'FromImage'
         managedDisk: {
-          storageAccountType: vmOSDiskType
+          storageAccountType: vmDiskSku
         }
         diskSizeGB: 127
       }
@@ -186,9 +206,11 @@ resource vm 'Microsoft.Compute/virtualMachines@2024-07-01' = {
     }
     priority: enableAzureSpotPricing ? 'Spot' : 'Regular'
     evictionPolicy: enableAzureSpotPricing ? 'Deallocate' : null
-    billingProfile: enableAzureSpotPricing ? {
-      maxPrice: -1
-    } : null
+    billingProfile: enableAzureSpotPricing
+      ? {
+          maxPrice: -1
+        }
+      : null
   }
 }
 
@@ -221,9 +243,8 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = if (autoShut
     }
     timeZoneId: autoShutdownTimezone
     notificationSettings: {
-      status: empty(autoShutdownEmailRecipient) ? 'Disabled' : 'Enabled' // Set status based on whether an email is provided
+      status: empty(autoShutdownEmailRecipient) ? 'Disabled' : 'Enabled'
       timeInMinutes: 30
-      webhookUrl: ''
       emailRecipient: autoShutdownEmailRecipient
       notificationLocale: 'en'
     }
@@ -231,6 +252,8 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = if (autoShut
   }
 }
 
-
-
-// TODO: Entra ID login for VM admin user ???
+// Outputs
+output vmName string = vm.name
+output vmResourceId string = vm.id
+output publicIpAddress string = publicIpAddress.properties.ipAddress
+output vmSystemAssignedIdentityPrincipalId string = vm.identity.principalId
