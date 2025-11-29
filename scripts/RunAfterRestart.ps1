@@ -1,4 +1,5 @@
-Start-Transcript -Path c:\Bootstrap.log -Append
+$TranscriptFile = "c:\Bootstrap.log"
+Start-Transcript -Path $TranscriptFile -Append
 
 
 

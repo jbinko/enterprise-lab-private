@@ -5,7 +5,8 @@ param (
     [string]$artifactsBaseUrl
 )
 
-Start-Transcript -Path c:\Bootstrap.log
+$TranscriptFile = "c:\Bootstrap.log"
+Start-Transcript -Path $TranscriptFile
 
 # Formatting VMs disk
 $disk = (Get-Disk | Where-Object partitionstyle -eq 'raw')[0]
