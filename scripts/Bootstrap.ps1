@@ -1,8 +1,8 @@
 param (
     [string]$windowsAdminUsername,
     [string]$windowsAdminPassword,
-    [string]$isoDownloadsJson,
-    [string]$templateBaseUrl
+    [string]$isoDownloadsBase64Json,
+    [string]$artifactsBaseUrl
 )
 
 Start-Transcript -Path c:\Bootstrap.log
@@ -22,7 +22,7 @@ Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter 
 # Downloading scripts
 $scriptsDir = "F:\Scripts"
 New-Item -ItemType Directory -Path $scriptsDir -Force | Out-Null
-Invoke-WebRequest ($templateBaseUrl + "scripts/RunAfterRestart.ps1") -OutFile $scriptsDir\RunAfterRestart.ps1
+Invoke-WebRequest ($artifactsBaseUrl + "scripts/RunAfterRestart.ps1") -OutFile $scriptsDir\RunAfterRestart.ps1
 
 # Installing tools
 Write-Host "Installing PowerShell 7"
@@ -113,8 +113,7 @@ $jobs = @()
 # Download ISOs
 Write-Host "Downloading ISOs in parallel..."
 # Decode base64 and convert JSON string to PowerShell object
-$isoDownloadsJson = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($isoDownloadsJson))
-$isoList = $isoDownloadsJson | ConvertFrom-Json
+$isoList = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($isoDownloadsBase64Json)) | ConvertFrom-Json
 $targetDir = "F:\LabSources\ISOs"
 
 foreach ($iso in $isoList) {

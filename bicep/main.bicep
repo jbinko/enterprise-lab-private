@@ -24,12 +24,12 @@ param autoShutdownEmailRecipient string = ''
 @description('Option to enable spot pricing for the master VM')
 param enableAzureSpotPricing bool = true
 
-@description('The base URL used for accessing artifacts and automation artifacts.')
-param templateBaseUrl string
+@description('The base URL used for accessing artifacts.')
+param artifactsBaseUrl string
 
-@description('JSON string containing ISO download links for various OSes.')
+@description('Base64-encoded JSON string containing ISO download links for various OSes.')
 @secure()
-param isoDownloadsJson string
+param isoDownloadsBase64Json string
 
 var networkSecurityGroupName = '${namingPrefix}-nsg'
 
@@ -203,9 +203,9 @@ resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' =
     autoUpgradeMinorVersion: true
     protectedSettings: {
       fileUris: [
-        uri(templateBaseUrl, 'scripts/Bootstrap.ps1')
+        uri(artifactsBaseUrl, 'scripts/Bootstrap.ps1')
       ]
-      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -windowsAdminUsername ${windowsAdminUsername} -windowsAdminPassword ${windowsAdminPassword} -isoDownloadsJson ${isoDownloadsJson} -templateBaseUrl ${templateBaseUrl}'
+      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -windowsAdminUsername ${windowsAdminUsername} -windowsAdminPassword ${windowsAdminPassword} -isoDownloadsBase64Json ${isoDownloadsBase64Json} -artifactsBaseUrl ${artifactsBaseUrl}'
     }
   }
 }
