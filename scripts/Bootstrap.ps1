@@ -74,13 +74,6 @@ Set-ItemProperty -Path $oobePath -Name $oobeProperty -Value $oobeValue
 
 Write-Host "Registry keys and values for Diagnostic Data settings have been set successfully."
 
-# Register schedule task to run after system reboot
-#Write-Host "Registering scheduled task to run after system reboot"
-#$Trigger = New-ScheduledTaskTrigger -AtStartup
-#$Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "$scriptsDir\RunAfterRestart.ps1"
-#Register-ScheduledTask -TaskName "RunAfterRestart" -Trigger $Trigger -User SYSTEM -Action $Action -RunLevel "Highest" -Force
-#Write-Host "Registered scheduled task 'RunAfterRestart' to run after system reboot."
-
 # Install AutomatedLab
 Write-Host "Installing AutomatedLab"
 Install-PackageProvider Nuget -Force -Confirm:$False
@@ -131,6 +124,14 @@ Write-Host "Installing Hyper-V and restart"
 Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
 Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
 Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
+
+
+# Register schedule task to run after system reboot
+Write-Host "Registering scheduled task to run after system reboot"
+$Trigger = New-ScheduledTaskTrigger -AtStartup
+$Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "$scriptsDir\RunAfterRestart.ps1"
+Register-ScheduledTask -TaskName "RunAfterRestart" -Trigger $Trigger -User SYSTEM -Action $Action -RunLevel "Highest" -Force
+Write-Host "Registered scheduled task 'RunAfterRestart' to run after system reboot."
 
 Stop-Transcript
 
