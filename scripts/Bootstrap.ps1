@@ -124,7 +124,8 @@ foreach ($iso in $isoList) {
         Invoke-WebRequest -Uri $url -OutFile $filePath
     } -ArgumentList $iso.isoDownloadUrl, $targetDir, $iso.name
 }
-
+# Wait for completion
+$jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
 
 
 
@@ -136,8 +137,6 @@ foreach ($iso in $isoList) {
 Write-Host "Installing Hyper-V"
 Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
 Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
-# Wait for completion
-$jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
 Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
 
 
