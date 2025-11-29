@@ -96,7 +96,8 @@ New-LabSourcesFolder -DriveLetter F
 
 # Download ISOs
 Write-Host "Downloading ISOs in parallel..."
-# Convert JSON string to PowerShell object
+# Decode base64 and convert JSON string to PowerShell object
+$isoDownloadsJson = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($isoDownloadsJson))
 $isoList = $isoDownloadsJson | ConvertFrom-Json
 
 # Set your target directory
