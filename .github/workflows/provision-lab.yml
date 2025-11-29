@@ -44,5 +44,5 @@ jobs:
       with:
         resourceGroupName: ${{ inputs.azure_rg }}
         template: ./main.bicep
-        parameters: location=${{ inputs.azure_location }} namingPrefix=${{ inputs.namingPrefix }} windowsAdminUsername=${{ secrets.WINDOWS_ADMIN_USERNAME }} windowsAdminPassword=${{ secrets.WINDOWS_ADMIN_PASSWORD }} templateBaseUrl="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/" isoDownloadsJson="${{ secrets.ISO_DOWNLOADS_JSON }}"
+        parameters: location=${{ inputs.azure_location }} namingPrefix=${{ inputs.namingPrefix }} windowsAdminUsername=${{ secrets.WINDOWS_ADMIN_USERNAME }} windowsAdminPassword=${{ secrets.WINDOWS_ADMIN_PASSWORD }} templateBaseUrl="https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref_name }}/" isoDownloadsJson='${{ secrets.ISO_DOWNLOADS_JSON }}'
         failOnStdErr: true
