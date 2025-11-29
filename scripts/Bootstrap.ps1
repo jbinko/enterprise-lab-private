@@ -1,7 +1,7 @@
 param (
-    [string]$windowsAdminUsername,
-    [string]$windowsAdminPassword,
-    [string]$isoDownloadsBase64Json,
+    [SecureString]$windowsAdminUsername,
+    [SecureString]$windowsAdminPassword,
+    [SecureString]$isoDownloadsBase64Json,
     [string]$artifactsBaseUrl
 )
 

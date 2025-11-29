@@ -227,7 +227,8 @@ resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' =
       fileUris: [
         uri(artifactsBaseUrl, 'scripts/Bootstrap.ps1')
       ]
-      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -windowsAdminUsername ${windowsAdminUsername} -windowsAdminPassword ${windowsAdminPassword} -isoDownloadsBase64Json ${isoDownloadsBase64Json} -artifactsBaseUrl ${artifactsBaseUrl}'
+      // The format() function in protectedSettings preserves the secure nature of the parameters, keeping them encrypted during transmission to the VM.
+      commandToExecute: format('powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -windowsAdminUsername {0} -windowsAdminPassword {1} -isoDownloadsBase64Json {2} -artifactsBaseUrl {3}', windowsAdminUsername, windowsAdminPassword, isoDownloadsBase64Json, artifactsBaseUrl)
     }
   }
 }
