@@ -6,6 +6,7 @@ param location string
 param namingPrefix string
 
 @description('Username for Windows account')
+@secure()
 param windowsAdminUsername string
 
 @description('Password for Windows account. Password must have 3 of the following: 1 lower case character, 1 upper case character, 1 number, and 1 special character. The value must be between 12 and 123 characters long')
@@ -17,6 +18,7 @@ param windowsAdminPassword string
 param autoShutdownEnabled bool = true
 param autoShutdownTime string = '0100' // The time for auto-shutdown in HHmm format (24-hour clock)
 param autoShutdownTimezone string = 'UTC' // Timezone for the auto-shutdown
+@secure()
 param autoShutdownEmailRecipient string = ''
 
 @description('Option to enable spot pricing for the master VM')
@@ -24,6 +26,10 @@ param enableAzureSpotPricing bool = true
 
 @description('The base URL used for accessing artifacts and automation artifacts.')
 param templateBaseUrl string
+
+@description('JSON string containing ISO download links for various OSes.')
+@secure()
+param isoDownloadsJson string
 
 var networkSecurityGroupName = '${namingPrefix}-nsg'
 
@@ -199,7 +205,7 @@ resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' =
       fileUris: [
         uri(templateBaseUrl, 'Bootstrap.ps1')
       ]
-      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1'
+      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -windowsAdminUsername ${windowsAdminUsername} -windowsAdminPassword ${windowsAdminPassword} -isoDownloadsJson ${isoDownloadsJson}'
     }
   }
 }

@@ -1,3 +1,9 @@
+param (
+    [string]$windowsAdminUsername,
+    [string]$windowsAdminPassword,
+    [string]$isoDownloadsJson
+)
+
 Start-Transcript -Path c:\Bootstrap.log
 
 # Formatting VMs disk
@@ -67,6 +73,12 @@ Set-ItemProperty -Path $oobePath -Name $oobeProperty -Value $oobeValue
 
 Write-Host "Registry keys and values for Diagnostic Data settings have been set successfully."
 
+# Install Hyper-V and reboot
+Write-Host "Installing Hyper-V and restart"
+Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -NoRestart
+
 # Install AutomatedLab
 Write-Host "Installing AutomatedLab"
 Install-PackageProvider Nuget -Force -Confirm:$False
@@ -82,17 +94,43 @@ Enable-LabHostRemoting -Force
 
 New-LabSourcesFolder -DriveLetter F
 
-# Create and install lab
-#Write-Host "Creating and installing lab"
-#New-LabDefinition -Name Win10 -DefaultVirtualizationEngine HyperV
-#Add-LabMachineDefinition -Name Client1 -Memory 1GB -OperatingSystem 'Windows 10 Pro'
-#Install-Lab
+# Download ISOs
+Write-Host "Downloading ISOs in parallel..."
+# Convert JSON string to PowerShell object
+$isoList = $isoDownloadsJson | ConvertFrom-Json
 
-# Install Hyper-V and reboot
-Write-Host "Installing Hyper-V and restart"
-Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
-Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
-Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
+# Set your target directory
+$targetDir = "F:\LabSources\ISOs"
+
+$jobs = @()
+foreach ($iso in $isoList) {
+    $jobs += Start-Job -ScriptBlock {
+        param($url, $dir, $name)
+        $filePath = Join-Path $dir $name
+        Write-Host "Downloading $url to $filePath"
+        Invoke-WebRequest -Uri $url -OutFile $filePath
+    } -ArgumentList $iso.isoDownloadUrl, $targetDir, $iso.name
+}
+
+# Wait for completion
+$jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
+
+# Create and install lab
+Write-Host "Creating and installing lab"
+# Get-LabAvailableOperatingSystem
+$labName = 'MyEnterpriseLab'
+$labDomainName = 'MyEnterpriseLab.net'
+$labSources = 'F:\LabSources'
+New-LabDefinition -Name $labName -DefaultVirtualizationEngine HyperV -VmPath F:\VMs
+Add-LabVirtualNetworkDefinition -Name $labName -AddressSpace 192.168.84.0/24
+Set-LabInstallationCredential -Username $windowsAdminUsername -Password $windowsAdminPassword
+Add-LabDomainDefinition -Name $labDomainName -AdminUser $windowsAdminUsername -AdminPassword $windowsAdminPassword
+Add-LabMachineDefinition -Name DC1 -Memory 3GB -Network $labName -IpAddress 192.168.84.10 `
+    -DnsServer1 192.168.84.10 -DomainName $labDomainName -Roles RootDC `
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
+Install-Lab
+Show-LabDeploymentSummary
+# -TimeZone -OrganizationalUnit -ActivateWindows
 
 Stop-Transcript
 
