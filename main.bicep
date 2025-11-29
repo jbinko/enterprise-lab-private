@@ -205,7 +205,7 @@ resource vmBootstrap 'Microsoft.Compute/virtualMachines/extensions@2024-07-01' =
       fileUris: [
         uri(templateBaseUrl, 'Bootstrap.ps1')
       ]
-      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -windowsAdminUsername ${windowsAdminUsername} -windowsAdminPassword ${windowsAdminPassword} -isoDownloadsJson ${isoDownloadsJson}'
+      commandToExecute: 'powershell.exe -ExecutionPolicy Bypass -File Bootstrap.ps1 -windowsAdminUsername ${windowsAdminUsername} -windowsAdminPassword ${windowsAdminPassword} -isoDownloadsJson ${isoDownloadsJson} -templateBaseUrl ${templateBaseUrl}'
     }
   }
 }

@@ -1,7 +1,8 @@
 param (
     [string]$windowsAdminUsername,
     [string]$windowsAdminPassword,
-    [string]$isoDownloadsJson
+    [string]$isoDownloadsJson,
+    [string]$templateBaseUrl
 )
 
 Start-Transcript -Path c:\Bootstrap.log
@@ -17,6 +18,11 @@ $disk | Initialize-Disk -PartitionStyle MBR -PassThru | `
 # Extending C:\ partition to the maximum size
 Write-Host "Extending C:\ partition to the maximum size"
 Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
+
+# Downloading scripts
+$scriptsDir = "F:\Scripts"
+New-Item -ItemType Directory -Path $scriptsDir -Force | Out-Null
+Invoke-WebRequest ($templateBaseUrl + "scripts/RunAfterRestart.ps1") -OutFile $scriptsDir\RunAfterRestart.ps1
 
 # Installing tools
 Write-Host "Installing PowerShell 7"
@@ -73,15 +79,21 @@ Set-ItemProperty -Path $oobePath -Name $oobeProperty -Value $oobeValue
 
 Write-Host "Registry keys and values for Diagnostic Data settings have been set successfully."
 
-$jobs = @()
 
-# Install Hyper-V
-$jobs += Start-Job -ScriptBlock {    
-    Write-Host "Installing Hyper-V"
-    Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
-    Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
-    Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools #-Restart
-}
+
+
+
+
+# Register schedule task to run after system reboot
+$Trigger = New-ScheduledTaskTrigger -AtStartup
+$Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "$scriptsDir\RunAfterRestart.ps1"
+Register-ScheduledTask -TaskName "RunAfterRestart" -Trigger $Trigger -User SYSTEM -Action $Action -RunLevel "Highest" -Force
+Write-Host "Registered scheduled task 'RunAfterRestart' to run after system reboot."
+
+
+
+
+$jobs = @()
 
 # Install AutomatedLab
 $jobs += Start-Job -ScriptBlock {    
@@ -119,29 +131,20 @@ foreach ($iso in $isoList) {
 # Wait for completion
 $jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
 
-# Create and install lab
-Write-Host "Creating and installing lab"
-# Get-LabAvailableOperatingSystem
-$labName = 'MyEnterpriseLab'
-$labDomainName = 'MyEnterpriseLab.net'
-$labDnsServer1 = '192.168.84.10'
-$labSources = 'F:\LabSources'
-New-LabDefinition -Name $labName -DefaultVirtualizationEngine HyperV -VmPath F:\VMs
-Add-LabVirtualNetworkDefinition -Name $labName -AddressSpace 192.168.84.0/24
-Set-LabInstallationCredential -Username $windowsAdminUsername -Password $windowsAdminPassword
-# DC
-Add-LabDomainDefinition -Name $labDomainName -AdminUser $windowsAdminUsername -AdminPassword $windowsAdminPassword
-Add-LabMachineDefinition -Name DC1 -Memory 3GB -Network $labName -IpAddress 192.168.84.10 `
-    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles RootDC `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
-# WEB
-$role = Get-LabMachineRoleDefinition -Role WebServer -Properties @{ OrganizationName = 'Marketing' }
-Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.84.20 `
-    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles $role `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
-Install-Lab
-Show-LabDeploymentSummary
-# -TimeZone -OrganizationalUnit -ActivateWindows
+
+
+
+
+
+# Install Hyper-V
+Write-Host "Installing Hyper-V"
+Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
+Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
+
+
+
+
 
 Stop-Transcript
 
