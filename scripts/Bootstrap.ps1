@@ -34,8 +34,7 @@ Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
 Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
 Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
 
-# Restart computer
-Restart-Computer
-
 Stop-Transcript
 
+# Restart computer
+#Restart-Computer
