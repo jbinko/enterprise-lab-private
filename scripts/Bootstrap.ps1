@@ -109,19 +109,15 @@ Write-Host "Downloading ISOs..."
 $isoList = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($isoDownloadsBase64Json)) | ConvertFrom-Json
 $targetDir = "F:\LabSources\ISOs"
 
-# TODO NECHCEME PARALENI STAHOVANI?
-$jobs = @()
 foreach ($iso in $isoList) {
-    $jobs += Start-Job -ScriptBlock {
-        param($url, $dir, $name)
-        $filePath = Join-Path $dir $name
-        Write-Host "Downloading $url to $filePath"
-        Invoke-WebRequest -Uri $url -OutFile $filePath
-    } -ArgumentList $iso.isoDownloadUrl, $targetDir, $iso.name
-}
+    $url = $iso.isoDownloadUrl
+    $dir = $targetDir
+    $name = $iso.name
 
-# Wait for completion
-$jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
+    $filePath = Join-Path $dir $name
+    Write-Host "Downloading $url to $filePath"
+    Invoke-WebRequest -Uri $url -OutFile $filePath
+}
 
 
 
