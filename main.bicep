@@ -28,7 +28,7 @@ param enableAzureSpotPricing bool = true
 param templateBaseUrl string
 
 @description('JSON string containing ISO download links for various OSes.')
-@secure()
+//@secure()
 param isoDownloadsJson string
 
 var networkSecurityGroupName = '${namingPrefix}-nsg'
