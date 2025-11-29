@@ -90,27 +90,25 @@ $Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "$scriptsD
 Register-ScheduledTask -TaskName "RunAfterRestart" -Trigger $Trigger -User SYSTEM -Action $Action -RunLevel "Highest" -Force
 Write-Host "Registered scheduled task 'RunAfterRestart' to run after system reboot."
 
+# Install AutomatedLab
+Write-Host "Installing AutomatedLab"
+Install-PackageProvider Nuget -Force -Confirm:$False
+Install-Module PSFramework -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
+Install-Module AutomatedLab -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
+
+#  Disable (which is already the default) and in addition skip dialog
+[Environment]::SetEnvironmentVariable('AUTOMATEDLAB_TELEMETRY_OPTIN', 'false', 'Machine')
+$env:AUTOMATEDLAB_TELEMETRY_OPTIN = 'false'
+
+# Pre-configure Lab Host Remoting
+Enable-LabHostRemoting -Force
+
+New-LabSourcesFolder -DriveLetter F
 
 
 
 $jobs = @()
 
-# Install AutomatedLab
-$jobs += Start-Job -ScriptBlock {    
-    Write-Host "Installing AutomatedLab"
-    Install-PackageProvider Nuget -Force -Confirm:$False
-    Install-Module PSFramework -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
-    Install-Module AutomatedLab -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
-
-    #  Disable (which is already the default) and in addition skip dialog
-    [Environment]::SetEnvironmentVariable('AUTOMATEDLAB_TELEMETRY_OPTIN', 'false', 'Machine')
-    $env:AUTOMATEDLAB_TELEMETRY_OPTIN = 'false'
-
-    # Pre-configure Lab Host Remoting
-    Enable-LabHostRemoting -Force
-
-    New-LabSourcesFolder -DriveLetter F
-}
 
 # Download ISOs
 Write-Host "Downloading ISOs in parallel..."
@@ -128,8 +126,7 @@ foreach ($iso in $isoList) {
     } -ArgumentList $iso.isoDownloadUrl, $targetDir, $iso.name
 }
 
-# Wait for completion
-$jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
+
 
 
 
@@ -140,6 +137,8 @@ $jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
 Write-Host "Installing Hyper-V"
 Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
 Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+# Wait for completion
+$jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
 Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools -Restart
 
 
