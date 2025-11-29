@@ -73,37 +73,40 @@ Set-ItemProperty -Path $oobePath -Name $oobeProperty -Value $oobeValue
 
 Write-Host "Registry keys and values for Diagnostic Data settings have been set successfully."
 
-# Install Hyper-V and reboot
-Write-Host "Installing Hyper-V and restart"
-Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
-Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
-Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools
+$jobs = @()
+
+# Install Hyper-V
+$jobs += Start-Job -ScriptBlock {    
+    Write-Host "Installing Hyper-V"
+    Enable-WindowsOptionalFeature -Online -FeatureName Containers -All -NoRestart
+    Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+    Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementTools #-Restart
+}
 
 # Install AutomatedLab
-Write-Host "Installing AutomatedLab"
-Install-PackageProvider Nuget -Force -Confirm:$False
-Install-Module PSFramework -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
-Install-Module AutomatedLab -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
+$jobs += Start-Job -ScriptBlock {    
+    Write-Host "Installing AutomatedLab"
+    Install-PackageProvider Nuget -Force -Confirm:$False
+    Install-Module PSFramework -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
+    Install-Module AutomatedLab -SkipPublisherCheck -Force -Confirm:$False -AllowClobber
 
-#  Disable (which is already the default) and in addition skip dialog
-[Environment]::SetEnvironmentVariable('AUTOMATEDLAB_TELEMETRY_OPTIN', 'false', 'Machine')
-$env:AUTOMATEDLAB_TELEMETRY_OPTIN = 'false'
+    #  Disable (which is already the default) and in addition skip dialog
+    [Environment]::SetEnvironmentVariable('AUTOMATEDLAB_TELEMETRY_OPTIN', 'false', 'Machine')
+    $env:AUTOMATEDLAB_TELEMETRY_OPTIN = 'false'
 
-# Pre-configure Lab Host Remoting
-Enable-LabHostRemoting -Force
+    # Pre-configure Lab Host Remoting
+    Enable-LabHostRemoting -Force
 
-New-LabSourcesFolder -DriveLetter F
+    New-LabSourcesFolder -DriveLetter F
+}
 
 # Download ISOs
 Write-Host "Downloading ISOs in parallel..."
 # Decode base64 and convert JSON string to PowerShell object
 $isoDownloadsJson = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($isoDownloadsJson))
 $isoList = $isoDownloadsJson | ConvertFrom-Json
-
-# Set your target directory
 $targetDir = "F:\LabSources\ISOs"
 
-$jobs = @()
 foreach ($iso in $isoList) {
     $jobs += Start-Job -ScriptBlock {
         param($url, $dir, $name)
