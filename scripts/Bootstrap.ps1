@@ -21,7 +21,8 @@ $disk | Initialize-Disk -PartitionStyle MBR -PassThru | `
 Write-Host "Extending C:\ partition to the maximum size"
 Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
 
-
+# Disabling Windows Server Manager Scheduled Task
+Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
 
 # Downloading scripts
 Write-Host "Downloading scripts"
@@ -98,20 +99,19 @@ New-LabSourcesFolder -DriveLetter F
 
 
 
+Write-Host "Installing PowerShell 7"
+$ProgressPreference = 'SilentlyContinue'
+$url = "https://github.com/PowerShell/PowerShell/releases/latest"
+$latestVersion = (Invoke-WebRequest -UseBasicParsing -Uri $url).Content | Select-String -Pattern "v[0-9]+\.[0-9]+\.[0-9]+" | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value
+$downloadUrl = "https://github.com/PowerShell/PowerShell/releases/download/$latestVersion/PowerShell-$($latestVersion.Substring(1,5))-win-x64.msi"
+Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
+Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
+Remove-Item .\PowerShell7.msi
+
+
 
 Write-Host "Starting parallel jobs"
 $jobs = @()
-
-Write-Host "Installing PowerShell 7"
-$jobs += Start-Job -ScriptBlock {
-    $ProgressPreference = 'SilentlyContinue'
-    $url = "https://github.com/PowerShell/PowerShell/releases/latest"
-    $latestVersion = (Invoke-WebRequest -UseBasicParsing -Uri $url).Content | Select-String -Pattern "v[0-9]+\.[0-9]+\.[0-9]+" | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value
-    $downloadUrl = "https://github.com/PowerShell/PowerShell/releases/download/$latestVersion/PowerShell-$($latestVersion.Substring(1,5))-win-x64.msi"
-    Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
-    Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
-    Remove-Item .\PowerShell7.msi
-}
 
 # Download ISOs
 Write-Host "Downloading ISOs in parallel..."
@@ -135,8 +135,6 @@ foreach ($iso in $isoList) {
 
 
 
-# Disabling Windows Server Manager Scheduled Task
-Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
 
 # Install Hyper-V and reboot
 Write-Host "Installing Hyper-V and restart"
