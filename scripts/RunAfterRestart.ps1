@@ -1,3 +1,8 @@
+param (
+    [string]$windowsAdminUsername,
+    [string]$windowsAdminPassword
+)
+
 $TranscriptFile = "c:\Bootstrap.log"
 Start-Transcript -Path $TranscriptFile -Append
 

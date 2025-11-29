@@ -129,7 +129,7 @@ Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementToo
 # Register schedule task to run after system reboot
 Write-Host "Registering scheduled task to run after system reboot"
 $Trigger = New-ScheduledTaskTrigger -AtStartup
-$Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "$scriptsDir\RunAfterRestart.ps1"
+$Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Bypass -File `"$scriptsDir\RunAfterRestart.ps1`" -windowsAdminUsername `"$windowsAdminUsername`" -windowsAdminPassword `"$windowsAdminPassword`""
 Register-ScheduledTask -TaskName "RunAfterRestart" -Trigger $Trigger -User SYSTEM -Action $Action -RunLevel "Highest" -Force
 Write-Host "Registered scheduled task 'RunAfterRestart' to run after system reboot."
 
