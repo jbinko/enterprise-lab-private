@@ -1,7 +1,7 @@
 param (
-    [SecureString]$windowsAdminUsername,
-    [SecureString]$windowsAdminPassword,
-    [SecureString]$isoDownloadsBase64Json,
+    [string]$windowsAdminUsername,
+    [string]$windowsAdminPassword,
+    [string]$isoDownloadsBase64Json,
     [string]$artifactsBaseUrl
 )
 
@@ -25,16 +25,7 @@ $scriptsDir = "F:\Scripts"
 New-Item -ItemType Directory -Path $scriptsDir -Force | Out-Null
 Invoke-WebRequest ($artifactsBaseUrl + "scripts/RunAfterRestart.ps1") -OutFile $scriptsDir\RunAfterRestart.ps1
 
-# Installing tools
-Write-Host "Installing PowerShell 7"
 
-$ProgressPreference = 'SilentlyContinue'
-$url = "https://github.com/PowerShell/PowerShell/releases/latest"
-$latestVersion = (Invoke-WebRequest -UseBasicParsing -Uri $url).Content | Select-String -Pattern "v[0-9]+\.[0-9]+\.[0-9]+" | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value
-$downloadUrl = "https://github.com/PowerShell/PowerShell/releases/download/$latestVersion/PowerShell-$($latestVersion.Substring(1,5))-win-x64.msi"
-Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
-Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
-Remove-Item .\PowerShell7.msi
 
 # Disable Microsoft Edge sidebar
 $RegistryPath = 'HKLM:\SOFTWARE\Policies\Microsoft\Edge'
@@ -111,6 +102,18 @@ New-LabSourcesFolder -DriveLetter F
 $jobs = @()
 
 
+Write-Host "Installing PowerShell 7"
+$jobs += Start-Job -ScriptBlock {
+    $ProgressPreference = 'SilentlyContinue'
+    $url = "https://github.com/PowerShell/PowerShell/releases/latest"
+    $latestVersion = (Invoke-WebRequest -UseBasicParsing -Uri $url).Content | Select-String -Pattern "v[0-9]+\.[0-9]+\.[0-9]+" | Select-Object -ExpandProperty Matches | Select-Object -ExpandProperty Value
+    $downloadUrl = "https://github.com/PowerShell/PowerShell/releases/download/$latestVersion/PowerShell-$($latestVersion.Substring(1,5))-win-x64.msi"
+    Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
+    Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
+    Remove-Item .\PowerShell7.msi
+}
+
+
 # Download ISOs
 Write-Host "Downloading ISOs in parallel..."
 # Decode base64 and convert JSON string to PowerShell object
@@ -127,6 +130,12 @@ foreach ($iso in $isoList) {
 }
 # Wait for completion
 $jobs | ForEach-Object { $_ | Wait-Job; Receive-Job $_; Remove-Job $_ }
+
+
+
+
+
+
 
 
 
