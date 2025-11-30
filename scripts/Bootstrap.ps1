@@ -90,8 +90,13 @@ Enable-LabHostRemoting -Force
 New-LabSourcesFolder -DriveLetter F
 
 
+# TODO: Set time zone from argument
+Set-TimeZone -Id "Central Europe Standard Time"
 
-<#
+
+# mozna presunout stahovani iso do RunAfterRestart.ps1
+
+
 Write-Host "Installing PowerShell 7"
 $ProgressPreference = 'SilentlyContinue'
 $url = "https://github.com/PowerShell/PowerShell/releases/latest"
@@ -100,7 +105,6 @@ $downloadUrl = "https://github.com/PowerShell/PowerShell/releases/download/$late
 Invoke-WebRequest -UseBasicParsing -Uri $downloadUrl -OutFile .\PowerShell7.msi
 Start-Process msiexec.exe -Wait -ArgumentList '/I PowerShell7.msi /quiet ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ADD_FILE_CONTEXT_MENU_RUNPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1 USE_MU=1 ENABLE_MU=1 ADD_PATH=1'
 Remove-Item .\PowerShell7.msi
-#>
 
 
 # Download ISOs
@@ -128,8 +132,8 @@ Install-WindowsFeature -Name Hyper-V -IncludeAllSubFeature -IncludeManagementToo
 Write-Host "Registering scheduled task to run after system reboot"
 $Trigger = New-ScheduledTaskTrigger -AtStartup
 $Action = New-ScheduledTaskAction -Execute "PowerShell.exe" -Argument "-ExecutionPolicy Bypass -File `"$scriptsDir\RunAfterRestart.ps1`" -windowsAdminUsername `"$windowsAdminUsername`" -windowsAdminPassword `"$windowsAdminPassword`""
-Register-ScheduledTask -TaskName "RunAfterRestart" -Trigger $Trigger -User SYSTEM -Action $Action -RunLevel "Highest" -Force
-Write-Host "Registered scheduled task 'RunAfterRestart' to run after system reboot."
+Register-ScheduledTask -TaskName "RunOnceAfterRestart" -Trigger $Trigger -User SYSTEM -Action $Action -RunLevel "Highest" -Force
+Write-Host "Registered scheduled task 'RunOnceAfterRestart' to run after system reboot."
 
 Stop-Transcript
 
