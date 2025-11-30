@@ -11,26 +11,6 @@ Start-Transcript -Path $TranscriptFile
 # Disabling Windows Server Manager Scheduled Task
 Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
 
-
-
-
-
-# Download ISOs
-Write-Host "Downloading ISOs..."
-# Decode base64 and convert JSON string to PowerShell object
-$isoList = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($isoDownloadsBase64Json)) | ConvertFrom-Json
-$targetDir = "C:\"
-
-foreach ($iso in $isoList) {
-    $filePath = Join-Path $targetDir $iso.name
-    Write-Host "Downloading $iso.isoDownloadUrl to $filePath"
-    Start-BitsTransfer -Source $iso.isoDownloadUrl -Destination $filePath
-}
-
-
-
-
-
 # Formatting VMs disk
 Write-Host "Formatting VMs disk"
 $disk = (Get-Disk | Where-Object partitionstyle -eq 'raw')[0]
@@ -130,13 +110,9 @@ $isoList = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64St
 $targetDir = "F:\LabSources\ISOs"
 
 foreach ($iso in $isoList) {
-    $url = $iso.isoDownloadUrl
-    $dir = $targetDir
-    $name = $iso.name
-
-    $filePath = Join-Path $dir $name
-    Write-Host "Downloading $url to $filePath"
-    Invoke-WebRequest -Uri $url -OutFile $filePath
+    $filePath = Join-Path $targetDir $iso.name
+    Write-Host "Downloading $iso.isoDownloadUrl to $filePath"
+    Start-BitsTransfer -Source $iso.isoDownloadUrl -Destination $filePath
 }
 
 
