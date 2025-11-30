@@ -8,6 +8,9 @@ param (
 $TranscriptFile = "c:\Bootstrap.log"
 Start-Transcript -Path $TranscriptFile
 
+# TODO: Set time zone from argument
+Set-TimeZone -Id "Central Europe Standard Time"
+
 # Disabling Windows Server Manager Scheduled Task
 Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
 
@@ -90,8 +93,7 @@ Enable-LabHostRemoting -Force
 New-LabSourcesFolder -DriveLetter F
 
 
-# TODO: Set time zone from argument
-Set-TimeZone -Id "Central Europe Standard Time"
+
 
 
 # mozna presunout stahovani iso do RunAfterRestart.ps1
