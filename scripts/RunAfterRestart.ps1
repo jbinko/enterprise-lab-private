@@ -36,22 +36,27 @@ Add-LabMachineDefinition -Name DC01 -Memory 3GB -Network $labName -IpAddress 192
     -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles RootDC `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
+# SQL
+Add-LabMachineDefinition -Name SQL01 -Memory 3GB -Network $labName -IpAddress 192.168.84.25 `
+    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles SQLServer2012 -TimeZone "Central Europe Standard Time" `
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
+
 # FS
 Add-LabMachineDefinition -Name FS01 -Memory 3GB -Network $labName -IpAddress 192.168.84.15 `
-    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles FileServer -OrganizationalUnit Marketing -TimeZone "Central Europe Standard Time" `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2012 Standard (Server with a GUI)'
+    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles FileServer -TimeZone "Central Europe Standard Time" `
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 # WEB
 Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.84.20 `
-    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles WebServer -OrganizationalUnit Marketing -TimeZone "Central Europe Standard Time" `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2012 Standard (Server with a GUI)'
-
-# SQL
-Add-LabMachineDefinition -Name SQL01 -Memory 3GB -Network $labName -IpAddress 192.168.84.25 `
-    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles SQLServer2012 -OrganizationalUnit Marketing -TimeZone "Central Europe Standard Time" `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2012 Standard (Server with a GUI)'
+    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles WebServer -TimeZone "Central Europe Standard Time" `
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 <#
+
+'Windows Server 2012 Standard (Server with a GUI)'
+-OrganizationalUnit Marketing 
+
+
 $role = Get-LabMachineRoleDefinition -Role WebServer -Properties @{ OrganizationName = 'Marketing' }
 Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.84.20 `
     -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles $role `
