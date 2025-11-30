@@ -8,6 +8,29 @@ param (
 $TranscriptFile = "c:\Bootstrap.log"
 Start-Transcript -Path $TranscriptFile
 
+# Disabling Windows Server Manager Scheduled Task
+Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
+
+
+
+
+
+# Download ISOs
+Write-Host "Downloading ISOs..."
+# Decode base64 and convert JSON string to PowerShell object
+$isoList = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($isoDownloadsBase64Json)) | ConvertFrom-Json
+$targetDir = "C:\"
+
+foreach ($iso in $isoList) {
+    $filePath = Join-Path $targetDir $iso.name
+    Write-Host "Downloading $iso.isoDownloadUrl to $filePath"
+    Start-BitsTransfer -Source $iso.isoDownloadUrl -Destination $filePath
+}
+
+
+
+
+
 # Formatting VMs disk
 Write-Host "Formatting VMs disk"
 $disk = (Get-Disk | Where-Object partitionstyle -eq 'raw')[0]
@@ -20,9 +43,6 @@ $disk | Initialize-Disk -PartitionStyle MBR -PassThru | `
 # Extending C:\ partition to the maximum size
 Write-Host "Extending C:\ partition to the maximum size"
 Resize-Partition -DriveLetter C -Size $(Get-PartitionSupportedSize -DriveLetter C).SizeMax
-
-# Disabling Windows Server Manager Scheduled Task
-Get-ScheduledTask -TaskName ServerManager | Disable-ScheduledTask
 
 # Downloading scripts
 Write-Host "Downloading scripts"
@@ -118,7 +138,6 @@ foreach ($iso in $isoList) {
     Write-Host "Downloading $url to $filePath"
     Invoke-WebRequest -Uri $url -OutFile $filePath
 }
-
 
 
 
