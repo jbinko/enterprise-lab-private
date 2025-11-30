@@ -9,6 +9,12 @@ Start-Transcript -Path $TranscriptFile -Append
 
 
 
+# Headless/Non-interactive Environments: Disable all prompts
+# Turn off telemetry, do not sync lab sources content
+Set-PSFConfig -FullName AutomatedLab.DoNotPrompt -Value $true -PassThru | Register-PSFConfig
+
+Set-PSFConfig -FullName AutomatedLab.Timeout_Sql2012Installation -Value 120 -PassThru | Register-PSFConfig
+
 
 
 # Create and install lab
@@ -50,6 +56,10 @@ $role = Get-LabMachineRoleDefinition -Role WebServer -Properties @{ Organization
 Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.84.20 `
     -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles $role `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
+
+Add-LabMachineDefinition -Name UBU01 -Memory 3GB -Network $labName -IpAddress 192.168.14.10 `
+    -DnsServer1 $labDnsServer1 `
+    -OperatingSystem 'Ubuntu-Server 24.04.3 LTS "Noble Numbat"' -UbuntuPackage Minimal
 #>
 
 
