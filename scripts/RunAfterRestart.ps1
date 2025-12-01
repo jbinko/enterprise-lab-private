@@ -26,8 +26,8 @@ Add-LabIsoImageDefinition -Name SQLServer2012 -Path $labSources\ISOs\en_sql_serv
 # DC
 Add-LabDomainDefinition -Name $labDomainName -AdminUser $windowsAdminUsername -AdminPassword $windowsAdminPassword
 Set-LabInstallationCredential -Username $windowsAdminUsername -Password $windowsAdminPassword
-Add-LabMachineDefinition -Name DC01 -Memory 3GB -Network $labName -IpAddress 192.168.84.10 `
-    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles RootDC `
+Add-LabMachineDefinition -Name DC01 -Memory 3GB -Network $labName -IpAddress $labDnsServer1 `
+    -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles RootDC -TimeZone "Central Europe Standard Time" `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 # SQL
