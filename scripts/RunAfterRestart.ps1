@@ -7,11 +7,43 @@ $TranscriptFile = "c:\Bootstrap.log"
 Start-Transcript -Path $TranscriptFile -Append
 
 
+
+
+# Wait for the Hyper-V Virtual Machine Management Service (vmms) to be running
+$maxWaitSeconds = 120
+$intervalSeconds = 5
+$elapsed = 0
+
+Write-Host "Waiting for the Hyper-V VMMS service to be running..."
+
+do {
+    $service = Get-Service -Name vmms -ErrorAction SilentlyContinue
+    if ($null -eq $service) {
+        Write-Host "vmms service not found. Waiting..."
+    }
+    elseif ($service.Status -eq 'Running') {
+        Write-Host "vmms service is running!"
+        break
+    } else {
+        Write-Host "vmms service status: $($service.Status). Waiting..."
+    }
+    Start-Sleep -Seconds $intervalSeconds
+    $elapsed += $intervalSeconds
+} while ($elapsed -lt $maxWaitSeconds)
+
+if ($null -eq $service -or $service.Status -ne 'Running') {
+    Write-Host "Timeout waiting for vmms service to start. Please investigate."
+    exit 1
+}
+
+
+
+
 # Create LabNATSwitch
 $LabNATSwitch = "LabNATSwitch"
 New-VMSwitch -SwitchName $LabNATSwitch -SwitchType Internal
-New-NetIPAddress -IPAddress 192.168.1.1 -PrefixLength 24 -InterfaceAlias "vEthernet ($LabNATSwitch)"
-New-NetNat -Name LabNATNetwork -InternalIPInterfaceAddressPrefix 192.168.1.0/24
+New-NetIPAddress -IPAddress 192.168.12.1 -PrefixLength 24 -InterfaceAlias "vEthernet ($LabNATSwitch)"
+New-NetNat -Name LabNATNetwork -InternalIPInterfaceAddressPrefix 192.168.12.0/24
 
 # Headless/Non-interactive Environments: Disable all prompts
 # Turn off telemetry, do not sync lab sources content
