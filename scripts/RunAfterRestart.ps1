@@ -43,20 +43,20 @@ Add-LabVirtualNetworkDefinition -Name $LabNATSwitch -HyperVProperties @{ SwitchT
 
 Add-LabIsoImageDefinition -Name SQLServer2012 -Path $labSources\ISOs\en_sql_server_2012_standard_edition_x86_x64_dvd_813403.iso
 
-# Router
-$netAdapter = @()
-$netAdapter += New-LabNetworkAdapterDefinition -VirtualSwitch $labName -Ipv4Address $labRouterGW
-$netAdapter += New-LabNetworkAdapterDefinition -VirtualSwitch $LabNATSwitch -Ipv4Address 192.168.2.10 -Ipv4Gateway 192.168.2.1 -Ipv4DNSServers 8.8.8.8
-Add-LabMachineDefinition -Name Router01 -Memory 3GB -NetworkAdapter $netAdapter `
-    -Roles Routing -TimeZone $labTimeZone `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
-
 # DC
 Add-LabDomainDefinition -Name $labDomainName -AdminUser $windowsAdminUsername -AdminPassword $windowsAdminPassword
 Set-LabInstallationCredential -Username $windowsAdminUsername -Password $windowsAdminPassword
 
 Add-LabMachineDefinition -Name DC01 -Memory 3GB -Network $labName -IpAddress $labDnsServer1 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles RootDC -TimeZone $labTimeZone `
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
+
+# Router
+$netAdapter = @()
+$netAdapter += New-LabNetworkAdapterDefinition -VirtualSwitch $labName -Ipv4Address $labRouterGW
+$netAdapter += New-LabNetworkAdapterDefinition -VirtualSwitch $LabNATSwitch -Ipv4Address 192.168.2.10 -Ipv4Gateway 192.168.2.1 -Ipv4DNSServers 8.8.8.8
+Add-LabMachineDefinition -Name Router01 -Memory 3GB -NetworkAdapter $netAdapter `
+    -DomainName $labDomainName -Roles Routing -TimeZone $labTimeZone `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 # SQL
