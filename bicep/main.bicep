@@ -120,6 +120,7 @@ resource networkInterface 'Microsoft.Network/networkInterfaces@2024-05-01' = {
   name: networkInterfaceName
   location: location
   properties: {
+    enableIPForwarding: true // THIS IS REQUIRED FOR HYPER-V NESTED VMs TO BE ABLE TO REACH INET
     ipConfigurations: [
       {
         name: 'ipconfig1'
