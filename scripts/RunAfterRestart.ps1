@@ -51,28 +51,28 @@ Add-LabMachineDefinition -Name Router01 -Memory 3GB -NetworkAdapter $netAdapter 
 # SQL
 Add-LabMachineDefinition -Name SQL01 -Memory 3GB -Network $labName -IpAddress 192.168.10.22 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles SQLServer2012 -TimeZone $labTimeZone `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2012 Standard (Server with a GUI)'
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 # FS
 Add-LabMachineDefinition -Name FS01 -Memory 3GB -Network $labName -IpAddress 192.168.10.20 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles FileServer -TimeZone $labTimeZone `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2012 Standard (Server with a GUI)'
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 # WEB
 Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.10.21 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles WebServer -TimeZone $labTimeZone `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2012 Standard (Server with a GUI)'
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 <#
 
-'Windows Server 2012 Standard (Server with a GUI)'
+'Windows Server 2019 Standard (Desktop Experience)'
 -OrganizationalUnit Marketing 
 
 
 $role = Get-LabMachineRoleDefinition -Role WebServer -Properties @{ OrganizationName = 'Marketing' }
 Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.10.20 `
     -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles $role `
-    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2012 Standard (Server with a GUI)'
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 Add-LabMachineDefinition -Name UBU01 -Memory 3GB -Network $labName -IpAddress $labDnsServer1 `
     -DnsServer1 $labDnsServer1 `
