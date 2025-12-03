@@ -8,18 +8,7 @@ Start-Transcript -Path $TranscriptFile -Append
 
 # Create LabNATSwitch
 $LabNATSwitch = "LabNATSwitch"
-$success = $false
-while (-not $success) {
-    try {
-        New-VMSwitch -SwitchName $LabNATSwitch -SwitchType Internal
-        Write-Host "New-VMSwitch command succeeded."
-        $success = $true
-    } catch {
-        Write-Warning "New-VMSwitch failed: $_"
-        Write-Host "Retrying in 10 seconds..."
-        Start-Sleep -Seconds 10
-    }
-}
+New-VMSwitch -SwitchName $LabNATSwitch -SwitchType Internal
 New-NetIPAddress -IPAddress '192.168.2.1' -PrefixLength 24 -InterfaceAlias "vEthernet ($LabNATSwitch)"
 New-NetNat -Name LabNATNetwork -InternalIPInterfaceAddressPrefix 192.168.2.0/24
 
