@@ -38,6 +38,7 @@ Set-LabInstallationCredential -Username $windowsAdminUsername -Password $windows
 
 Add-LabMachineDefinition -Name DC01 -Memory 3GB -Network $labName -IpAddress $labDnsServer1 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles RootDC -TimeZone $labTimeZone `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 # Router
@@ -46,21 +47,25 @@ $netAdapter += New-LabNetworkAdapterDefinition -VirtualSwitch $labName -Ipv4Addr
 $netAdapter += New-LabNetworkAdapterDefinition -VirtualSwitch $LabNATSwitch -Ipv4Address 192.168.2.10 -Ipv4Gateway 192.168.2.1 -Ipv4DNSServers 8.8.8.8
 Add-LabMachineDefinition -Name Router01 -Memory 3GB -NetworkAdapter $netAdapter `
     -DomainName $labDomainName -Roles Routing -TimeZone $labTimeZone `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 # SQL
 Add-LabMachineDefinition -Name SQL01 -Memory 3GB -Network $labName -IpAddress 192.168.10.22 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles SQLServer2012 -TimeZone $labTimeZone `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 # FS
 Add-LabMachineDefinition -Name FS01 -Memory 3GB -Network $labName -IpAddress 192.168.10.20 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles FileServer -TimeZone $labTimeZone `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 # WEB
 Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.10.21 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles WebServer -TimeZone $labTimeZone `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 <#
@@ -72,17 +77,18 @@ Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 19
 $role = Get-LabMachineRoleDefinition -Role WebServer -Properties @{ OrganizationName = 'Marketing' }
 Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.10.20 `
     -DnsServer1 $labDnsServer1 -DomainName $labDomainName -Roles $role `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 Add-LabMachineDefinition -Name UBU01 -Memory 3GB -Network $labName -IpAddress $labDnsServer1 `
     -DnsServer1 $labDnsServer1 `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
     -OperatingSystem 'Ubuntu-Server 24.04.3 LTS "Noble Numbat"' -UbuntuPackage Minimal
 #>
 
 Install-Lab
 Show-LabDeploymentSummary
 # -ActivateWindows
-
 
 Unregister-ScheduledTask -TaskName 'RunOnceAfterRestart' -Confirm:$false
 
