@@ -69,7 +69,7 @@ Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 19
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 # DEV
-Add-LabMachineDefinition -Name DEV01 -Memory 8GB -Network $labName -IpAddress 192.168.10.50 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
+Add-LabMachineDefinition -Name DEV01 -Memory 6GB -Network $labName -IpAddress 192.168.10.50 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -TimeZone $labTimeZone `
     -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '30'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
