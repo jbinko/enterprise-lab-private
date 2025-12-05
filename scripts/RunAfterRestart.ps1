@@ -68,6 +68,21 @@ Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 19
     -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
+# DEV
+Add-LabMachineDefinition -Name DEV01 -Memory 8GB -Network $labName -IpAddress 192.168.10.50 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
+    -DomainName $labDomainName -TimeZone $labTimeZone `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
+    -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
+
+function Foo
+{
+    Start-Transcript -Path $TranscriptFile -Append
+    "The value of '`$TranscriptFile' is $TranscriptFile"
+    Stop-Transcript
+}
+
+Invoke-LabCommand -ComputerName DEV01 -ScriptBlock { Foo } -Variable (Get-Variable -Name TranscriptFile) -Function (Get-Command -Name Foo)
+
 <#
 
 'Windows Server 2019 Standard (Desktop Experience)'
