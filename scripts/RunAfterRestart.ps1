@@ -38,7 +38,7 @@ Set-LabInstallationCredential -Username $windowsAdminUsername -Password $windows
 
 Add-LabMachineDefinition -Name DC01 -Memory 3GB -Network $labName -IpAddress $labDnsServer1 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles RootDC -TimeZone $labTimeZone `
-    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '0'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 # Router
@@ -47,31 +47,31 @@ $netAdapter += New-LabNetworkAdapterDefinition -VirtualSwitch $labName -Ipv4Addr
 $netAdapter += New-LabNetworkAdapterDefinition -VirtualSwitch $LabNATSwitch -Ipv4Address 192.168.2.10 -Ipv4Gateway 192.168.2.1 -Ipv4DNSServers 8.8.8.8
 Add-LabMachineDefinition -Name Router01 -Memory 3GB -NetworkAdapter $netAdapter `
     -DomainName $labDomainName -Roles Routing -TimeZone $labTimeZone `
-    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '0'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 # SQL
 Add-LabMachineDefinition -Name SQL01 -Memory 3GB -Network $labName -IpAddress 192.168.10.22 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles SQLServer2012 -TimeZone $labTimeZone `
-    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '30'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 # FS
 Add-LabMachineDefinition -Name FS01 -Memory 3GB -Network $labName -IpAddress 192.168.10.20 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles FileServer -TimeZone $labTimeZone `
-    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '30'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 # WEB
 Add-LabMachineDefinition -Name WEB01 -Memory 3GB -Network $labName -IpAddress 192.168.10.21 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -Roles WebServer -TimeZone $labTimeZone `
-    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '30'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2019 Standard (Desktop Experience)'
 
 # DEV
 Add-LabMachineDefinition -Name DEV01 -Memory 8GB -Network $labName -IpAddress 192.168.10.50 -Gateway $labRouterGW -DnsServer1 $labDnsServer1 `
     -DomainName $labDomainName -TimeZone $labTimeZone `
-    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '10'; AutomaticStopAction = 'Save'} `
+    -HypervProperties @{AutomaticStartAction = 'Start'; AutomaticStartDelay = '30'; AutomaticStopAction = 'Save'} `
     -ToolsPath $labSources\Tools -OperatingSystem 'Windows Server 2025 Standard (Desktop Experience)'
 
 function Foo
@@ -79,6 +79,8 @@ function Foo
     Start-Transcript -Path $TranscriptFile -Append
     "The value of '`$TranscriptFile' is $TranscriptFile"
     Stop-Transcript
+
+    # VSCode + git
 }
 
 Invoke-LabCommand -ComputerName DEV01 -ScriptBlock { Foo } -Variable (Get-Variable -Name TranscriptFile) -Function (Get-Command -Name Foo)
