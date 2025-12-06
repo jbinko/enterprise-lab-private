@@ -160,6 +160,13 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
   }
 }
 
+resource dataContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-01-01' = {
+  name: '${storageAccount.name}/default/data'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
 resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {
   name: '${storageAccountName}-pe-blob'
   location: location
