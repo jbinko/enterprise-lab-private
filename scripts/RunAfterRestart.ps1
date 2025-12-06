@@ -77,7 +77,7 @@ Add-LabMachineDefinition -Name DEV01 -Memory 6GB -Network $labName -IpAddress 19
 function Foo
 {
     Start-Transcript -Path $TranscriptFile -Append
-    "The value of '`$TranscriptFile' is $TranscriptFile"
+    winget install -e --silent --accept-package-agreements --accept-source-agreements --id Microsoft.VisualStudioCode
     Stop-Transcript
 
     # VSCode + git

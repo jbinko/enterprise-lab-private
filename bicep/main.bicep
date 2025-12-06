@@ -3,6 +3,7 @@ metadata description = 'Enterprise lab infrastructure deployment with Hyper-V ca
 @description('Azure region for resources')
 param location string = resourceGroup().location
 
+@minLength(3)
 @maxLength(7)
 @description('The naming prefix for the resources')
 param namingPrefix string
@@ -61,15 +62,22 @@ param dataDiskSizeGB int = 256
 
 // Naming variables
 var vmName = '${namingPrefix}-vm'
+var storageAccountName = '${namingPrefix}sa'
 var networkSecurityGroupName = '${namingPrefix}-nsg'
 var virtualNetworkName = '${namingPrefix}-vnet'
 var publicIpAddressName = '${vmName}-pip'
 var networkInterfaceName = '${vmName}-nic'
 
 // Network configuration
-var addressPrefix = '192.168.0.0/24'
-var subnetName = 'vm-subnet'
-var subnetAddressPrefix = '192.168.0.0/24'
+var addressPrefix = '192.168.0.0/23'
+var subnetName01 = 'vm-subnet'
+var subnetAddressPrefix01 = '192.168.0.0/24'
+var subnetName02 = 'pl-subnet'
+var subnetAddressPrefix02 = '192.168.1.0/24'
+
+var privateDnsZoneBlobName string = 'privatelink.blob.${environment().suffixes.storage}'
+
+// ----- Network resources
 
 resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   name: networkSecurityGroupName
@@ -90,9 +98,18 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
     }
     subnets: [
       {
-        name: subnetName
+        name: subnetName01
         properties: {
-          addressPrefix: subnetAddressPrefix
+          addressPrefix: subnetAddressPrefix01
+          networkSecurityGroup: {
+            id: networkSecurityGroup.id
+          }
+        }
+      }
+      {
+        name: subnetName02
+        properties: {
+          addressPrefix: subnetAddressPrefix02
           networkSecurityGroup: {
             id: networkSecurityGroup.id
           }
@@ -101,6 +118,88 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
     ]
   }
 }
+
+// ----- Storage Account with Private Endpoint for Blob access
+
+resource privateDnsZoneBlob 'Microsoft.Network/privateDnsZones@2020-06-01' = {
+  name: privateDnsZoneBlobName
+  location: 'global'
+}
+
+resource privateDnsZoneBlobVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01' = {
+  parent: privateDnsZoneBlob
+  name: '${virtualNetwork.name}-link'
+  location: 'global'
+  properties: {
+    virtualNetwork: {
+      id: virtualNetwork.id
+    }
+    registrationEnabled: false
+  }
+}
+
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: storageAccountName
+  location: location
+  sku: {
+    name: 'Standard_LRS'
+  }
+  kind: 'StorageV2'
+  properties: {
+    accessTier: 'Hot'
+    publicNetworkAccess: 'Disabled'
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Deny'
+      ipRules: []
+      virtualNetworkRules: []
+    }
+    supportsHttpsTrafficOnly: true
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+  }
+}
+
+resource storagePrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-05-01' = {
+  name: '${storageAccountName}-pe-blob'
+  location: location
+  properties: {
+    subnet: {
+      id: virtualNetwork.properties.subnets[1].id
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${storageAccountName}-blob-pls'
+        properties: {
+          privateLinkServiceId: storageAccount.id
+          groupIds: [
+            'blob'
+          ]
+        }
+      }
+    ]
+  }
+}
+
+resource privateDnsZoneGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-05-01' = {
+  parent: storagePrivateEndpoint
+  name: 'blob-dns-zone-group'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'blob-zone-config'
+        properties: {
+          privateDnsZoneId: privateDnsZoneBlob.id
+        }
+      }
+    ]
+  }
+  dependsOn: [
+    privateDnsZoneBlobVnetLink
+  ]
+}
+
+// ----- VM resources
 
 resource publicIpAddress 'Microsoft.Network/publicIPAddresses@2024-05-01' = {
   name: publicIpAddressName
@@ -255,6 +354,10 @@ resource autoShutdown 'Microsoft.DevTestLab/schedules@2018-09-15' = if (autoShut
 }
 
 // Outputs
+
+output storageAccountName string = storageAccount.name
+output storageAccountResourceId string = storageAccount.id
+
 output vmName string = vm.name
 output vmResourceId string = vm.id
 output publicIpAddress string = publicIpAddress.properties.ipAddress
